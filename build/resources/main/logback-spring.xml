@@ -1,0 +1,28 @@
+<configuration>
+
+
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+
+    <appender name="FILE_BATCH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <!--        <file>./src/main/resources/Log/ApiLog.${yyyymmdd}.tsv</file>-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>./src/main/resources/Log/ApiLog.%d{yyyy-MM-dd}.tsv</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%msg %n</pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="com.example.restfulapi.logger.BatchLogger" level="INFO">
+        <appender-ref ref="FILE_BATCH"/>
+    </logger>
+
+    <root level="info">
+
+    </root>
+
+</configuration>

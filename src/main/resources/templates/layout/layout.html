@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+
+      xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+
+        <meta charset="UTF-8"/>
+
+
+        <link crossorigin='anonymous' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'
+
+              integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' rel='stylesheet'>
+
+
+        <meta content="noindex,nofollow,noarchive" name="robots">
+
+        <title>Oauth system</title>
+
+    </head>
+
+    <body>
+
+        <div layout:replace="~{layout/content::content}"></div>
+
+        <div class="container">
+
+            <div layout:fragment="main" th:remove="tag"></div>
+
+        </div>
+
+    </body>
+
+</html>
+

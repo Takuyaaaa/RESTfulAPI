@@ -1,0 +1,39 @@
+spring:
+  profiles: local
+  datasource:
+    url:  jdbc:mysql://localhost:3306/api_db
+    username: root
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialization-mode: always
+  main:
+    allow-bean-definition-overriding: true
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 100KB
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+path:
+  image: ./src/main/resources/imageDirectory
+
+github:
+  callbackUrl: http://localhost:8080/github/callback
+
+token:
+  boarderLine: 30
+
+
+cron:
+  batchCycle: 0 30 0 * * *
+  timeZone: Asia/Tokyo

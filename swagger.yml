@@ -1,0 +1,403 @@
+openapi: 3.0.0
+info:
+  description: 商品データをの参照、作成、更新、削除を行うAPIです。画像の登録は、商品登録のURLからではなく、別途画像更新のURからform-data形式で送信することを想定しています。
+  version: 1.0.0
+  title: RESTfulAPI for Products
+tags:
+  - name: product
+    description: 商品データベースに対して変更を行う
+paths:
+  /api/products:
+    post:
+      tags:
+        - product
+      summary: 商品の新規登録
+      security:
+        - Bearer: []
+      description: データベースに登録する、Titile/Description/Price/ImagePathの情報をjsonで送信(ImageはupdateImageで別途登録することを想定)
+      operationId: registerProduct
+      requestBody:
+        description: Titile/Description/Priceは必須。Priceは1円以上 1000000円以下で入力。
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  example: 1
+                title:
+                  type: string
+                  example: Apple
+                description:
+                  type: string
+                  example: very sweet
+                image_path:
+                  type: string
+                  example: ""
+      responses:
+        "400":
+          description: リクエストボディの情報がvalidation条件を満たしていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    get:
+      tags:
+        - product
+      summary: 商品一覧の取得
+      description: titleパラメーターは任意。送信した場合には、部分一致での検索を、送信されなかった場合には全件検索を行う
+      security:
+        - Bearer: []
+      operationId: searchProducts
+      parameters:
+        - in: query
+          description: 商品タイトルと部分一致検索を行いたい文字
+          required: false
+          name: title
+          schema:
+            $ref: '#/components/schemas/Product'
+      responses:
+        "400":
+          description: titleパラメーターが正しく送信されなかった[&title=..]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /api/product/{id}:
+    get:
+      tags:
+        - product
+      summary: IDによる商品検索
+      security:
+        - Bearer: []
+      description: 送信されたIDを持つ商品を検索
+      operationId: searchProductsById
+      parameters:
+        - in: path
+          name: id
+          description: 参照したい商品のID
+          required: true
+          schema:
+            $ref: '#/components/schemas/Product'
+      responses:
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "404":
+          description: 該当IDを持つ商品が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    put:
+      tags:
+        - product
+      summary: 商品の更新
+      security:
+        - Bearer: []
+      description: 送信されたIDを持つ商品の情報を変更
+      operationId: changeProduct
+      parameters:
+        - in: path
+          name: id
+          description: 参照したい商品のID
+          required: true
+          schema:
+            type: number
+      responses:
+        "400":
+          description: リクエストボディの情報がvalidation条件を満たしていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "404":
+          description: 該当IDを持つ商品が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    delete:
+      tags:
+        - product
+      summary: 商品の削除
+      security:
+        - Bearer: []
+      description: 送信されたIDを持つ商品の情報を削除
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          description: 削除したい商品のID
+          required: true
+          schema:
+            type: number
+      responses:
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "404":
+          description: 該当IDを持つ商品が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /api/products/{id}/images:
+    patch:
+      tags:
+        - product
+      summary: 商品画像の更新
+      security:
+        - Bearer: []
+      description: form-data形式で送られた画像を、入力されたIDを持つ商品に割り当てる。拡張子はjpeg、jpg、gif、pngに対応し、画像容量の上限は　100Kbytes。
+      operationId: updateImage
+      parameters:
+        - in: path
+          description: 画像を更新したい商品のID
+          required: true
+          name: id
+          schema:
+            type: number
+      responses:
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "404":
+          description: 該当IDを持つ商品が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        "415":
+          description: 送信された画像の拡張子が無効、画像の容量が100Kbytes以上
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsupportedMediaType'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /api/products/{id}/images/{path}.{suffix}:
+    get:
+      tags:
+        - product
+      summary: 商品画像の取得
+      security:
+        - Bearer: []
+      description: データベースの検索は行わず、送信されたpathを元に画像をディレクトリから参照し表示を行う。すでに当該商品に画像が割り当てられている場合には、それを削除し送信されたものを対応画像として保存する。
+      operationId: getImage
+      parameters:
+        - in: path
+          description: 画像を取得したい商品のID
+          required: true
+          name: id
+          schema:
+            type: number
+        - in: path
+          description: 保存されている画像の名前。UUIDで構成され、searchProductsなどから確認できる
+          required: true
+          name: path
+          schema:
+            type: string
+        - in: path
+          description: 保存されている画像の拡張子。
+          required: true
+          name: suffix
+          schema:
+            type: object
+      responses:
+        "401":
+          description: トークンによる認証に失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        "404":
+          description: 該当IDを持つ商品が存在しない、あるいはその商品に画像が割り当てられていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        "500":
+          description: 不明なサーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: Credentials or access token for API
+
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - price
+        - create_time
+        - update_time
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: Apple
+        description:
+          type: string
+          example: very sweet
+        price:
+          type: integer
+          example: 1200
+        image_path:
+          type: string
+          example: "api/products/{id}/images..."
+        create_time:
+          type: string
+          example: "2019-11-19 19:34:03"
+        update_time:
+          type: string
+          example: "2019-11-19 19:34:03"
+    BadRequest:
+      type: 'object'
+      required:
+        - "Error"
+      properties:
+        Error:
+          type: 'object'
+          properties:
+            Detail:
+              type: 'string'
+              example: '入力項目に誤りがあります。タイトル、ディスクリプション、価格について確認してください。タイトルとディスクリプションの入力は必須、かつプライスの範囲は1円以上 1,000,000円以下となります。'
+            Code:
+              type: 'string'
+              example: 'Validation failed for argument..'
+
+    Unauthorized:
+      type: 'object'
+      required:
+        - "Error"
+      properties:
+        Error:
+          type: 'object'
+          properties:
+            Detail:
+              type: 'string'
+              example: '認証に失敗しました。Key:Authorization、Value:[Bearer AccessToken...]のフォーマットで、正しいトークンが入力されているか確認してください。また、トークンの有効期限は最終更新から30分です。'
+            Code:
+              type: 'string'
+              example: 'Unauthorized Exception'
+
+    NotFound:
+      type: 'object'
+      required:
+        - "Error"
+      properties:
+        Error:
+          type: 'object'
+          properties:
+            Detail:
+              type: 'object'
+              example: '入力したidに対応するプロダクトが存在しません'
+            Code:
+              type: 'string'
+              example: 'Not Found Exception'
+    UnsupportedMediaType:
+      type: 'object'
+      required:
+        - "Error"
+      properties:
+        Error:
+          type: 'object'
+          properties:
+            Detail:
+              type: 'string'
+              example: '画像アップロードに対応している拡張子は jpeg、jpg、gif、pngになります'
+            Code:
+              type: 'string'
+              example: 'No enum constant....'
+    InternalServerError:
+      type: 'object'
+      required:
+        - "Error"
+      properties:
+        Error:
+          type: 'object'
+          properties:
+            Detail:
+              type: 'string'
+              example: '不明なエラーです'
+            Code:
+              type: 'string'
+              example: '500 InternalServer Error'
+
+
